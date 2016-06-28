@@ -75,9 +75,9 @@
   file:
     path: "{{ pg_backups_dir }}"
     state: directory
-    owner: root
-    group: systems
-    mode: "02750"
+    owner: "{{ pg_backups_dir_owner }}"
+    group: "{{ pg_backups_dir_group }}"
+    mode: "{{ pg_backups_dir_mode }}"
 
 - name: "Prepare daily backups through logrotate"
   template:

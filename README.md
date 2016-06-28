@@ -25,7 +25,7 @@ Example Playbook
 
     - hosts: postgresqlservers
       roles:
-         - role: mcenirm.postgresql-9.4-server
+         - role: mcenirm.postgresql94-server
 
 License
 -------

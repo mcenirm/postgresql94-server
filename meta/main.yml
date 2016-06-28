@@ -1,6 +1,6 @@
 galaxy_info:
   author: Michael McEniry
-  description: PostgreSQL server
+  description: PostgreSQL 9.4 server
 
   license: BSD
 

@@ -1,0 +1,104 @@
+---
+- name: "Enable PostgreSQL 9.4 from PGDG"
+  yum:
+    name: "{{ pgdg_repo_rpm_url }}"
+    state: present
+
+- name: "Install PostgreSQL server packages"
+  with_items:
+    - "check_postgres"
+    - "pgcenter"
+    - "postgis2_94"
+    - "postgis2_94-utils"
+    - "postgresql94-contrib"
+    - "postgresql94-server"
+    - "split_postgres_dump"
+  yum:
+    name: "{{ item }}"
+    state: present
+
+- name: "Install PostgreSQL client packages"
+  with_items:
+    - "gdal"
+    - "gdal-devel"
+    - "gdal-libs"
+    - "gdal-perl"
+    - "gdal-python"
+    - "geos"
+    - "geos-devel"
+    - "geos-python"
+    - "postgis2_94-client"
+    - "postgis2_94-devel"
+    - "postgresql94"
+    - "postgresql94-devel"
+    - "postgresql94-libs"
+    - "proj"
+    - "proj-devel"
+    - "proj-epsg"
+    - "proj-nad"
+    - "python-psycopg2"
+  yum:
+    name: "{{ item }}"
+    state: present
+
+- name: "Fix missing pg_config"
+  alternatives:
+    name: "pgsql-pg_config"
+    path: "/usr/pgsql-9.4/bin/pg_config"
+    link: "/usr/bin/pg_config"
+
+- name: "Has database been initialized?"
+  register: initdb
+  command: "{{ '/usr/pgsql-9.4/bin/postgresql94-check-db-dir ' ~ pg_data_dir }}"
+  ignore_errors: true
+  always_run: true
+
+- name: "Initialize database"
+  when: initdb|failed
+  command: "/usr/pgsql-9.4/bin/postgresql94-setup initdb"
+
+- name: "Adjust PostgreSQL configuration"
+  with_items:
+    - "pg_hba.conf"
+    - "pg_ident.conf"
+    - "postgresql.conf"
+  copy:
+    dest: "{{ pg_data_dir ~ '/' ~ item }}"
+    src: "{{ item }}"
+    owner: "postgres"
+    group: "postgres"
+    mode: "0600"
+  notify:
+    - "Restart postgresql-9.4 service"
+
+- name: "Prepare backup file location"
+  file:
+    path: "{{ pg_backups_dir }}"
+    state: directory
+    owner: root
+    group: systems
+    mode: "02750"
+
+- name: "Prepare daily backups through logrotate"
+  template:
+    dest: "/etc/logrotate.d/backup_postgresql"
+    src: "logrotate-backup_postgresql"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: "Enable PostgreSQL service"
+  service:
+    name: "postgresql-9.4"
+    state: started
+    enabled: yes
+
+- name: "Check to see if we need to initialize backups"
+  register: previous_backup_file
+  stat:
+    path: "{{ pg_backups_dir ~ '/globals.pg' }}"
+  always_run: true
+
+- name: "Initialize backups"
+  when: not previous_backup_file.stat.exists
+  command: "{{ '/usr/bin/pg_dumpall -U postgres -wg -f ' ~ pg_backups_dir ~ '/globals.pg' }}"

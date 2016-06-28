@@ -1,0 +1,16 @@
+galaxy_info:
+  author: Michael McEniry
+  description: PostgreSQL server
+
+  license: BSD
+
+  min_ansible_version: 2.1
+
+  platforms:
+    - name: EL
+      versions:
+        - 7
+
+  galaxy_tags: []
+
+dependencies: []

@@ -1,0 +1,18 @@
+{{ pg_backups_dir }}/*.pg {
+  nocompress
+  nocreate
+  daily
+  dateext
+  notifempty
+  postrotate
+    umask 077
+    /usr/bin/pg_dumpall -U postgres -wg -f {{ pg_backups_dir }}/globals.pg
+    /usr/bin/psql -U postgres -wAtc 'select datname from pg_database;' postgres | while read ; do
+      if [ -n "$REPLY" -a "$REPLY" != template0 ] ; then
+        /usr/bin/pg_dump -U postgres -w -Fc -f {{ pg_backups_dir }}/db."$REPLY".pg "$REPLY"
+      fi
+    done
+  endscript
+  rotate 14
+  sharedscripts
+}

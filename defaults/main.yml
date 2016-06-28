@@ -1,0 +1,4 @@
+---
+pgdg_repo_rpm_url: "https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-2.noarch.rpm"
+pg_data_dir: "/var/lib/pgsql/9.4/data"
+pg_backups_dir: "/var/lib/pgsql/9.4/backups"
